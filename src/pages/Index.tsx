@@ -1,122 +1,80 @@
 import { useState } from "react";
 import Icon from "@/components/ui/icon";
+import EditableText from "@/components/EditableText";
 
-const SOIL_DATA = [
-  {
-    plant: "Монстера, филодендрон",
-    type: "Тропические",
-    product: "Умный Грунт «Тропик»",
-    drainage: "Высокий",
-    watering: "1–2 раза в неделю",
-    ph: "5.5–6.5",
-    tag: "bestseller",
-  },
-  {
-    plant: "Кактус, суккулент",
-    type: "Суккуленты",
-    product: "Умный Грунт «Пустыня»",
-    drainage: "Очень высокий",
-    watering: "1–2 раза в месяц",
-    ph: "6.0–7.5",
-    tag: null,
-  },
-  {
-    plant: "Орхидея фаленопсис",
-    type: "Орхидеи",
-    product: "Умный Грунт «Орхид»",
-    drainage: "Максимальный",
-    watering: "Раз в 1–2 недели",
-    ph: "5.5–6.5",
-    tag: "popular",
-  },
-  {
-    plant: "Роза, пион, хризантема",
-    type: "Цветущие",
-    product: "Умный Грунт «Цветение»",
-    drainage: "Средний",
-    watering: "3–4 раза в неделю",
-    ph: "6.0–7.0",
-    tag: null,
-  },
-  {
-    plant: "Томат, перец, огурец",
-    type: "Овощи",
-    product: "Умный Грунт «Урожай»",
-    drainage: "Средний",
-    watering: "Ежедневно",
-    ph: "6.2–7.0",
-    tag: "new",
-  },
-  {
-    plant: "Папоротник, хоста",
-    type: "Теневые",
-    product: "Умный Грунт «Тень»",
-    drainage: "Низкий",
-    watering: "2–3 раза в неделю",
-    ph: "5.0–6.5",
-    tag: null,
-  },
-  {
-    plant: "Бонсай",
-    type: "Бонсай",
-    product: "Умный Грунт «Дзен»",
-    drainage: "Высокий",
-    watering: "По необходимости",
-    ph: "6.0–7.0",
-    tag: "popular",
-  },
+type SoilRow = {
+  plant: string; type: string; product: string;
+  drainage: string; watering: string; ph: string; tag: string | null;
+};
+
+type Guide = { step: string; title: string; desc: string; icon: string; };
+
+const INITIAL_SOIL: SoilRow[] = [
+  { plant: "Монстера, филодендрон", type: "Тропические", product: "Умный Грунт «Тропик»", drainage: "Высокий", watering: "1–2 раза в неделю", ph: "5.5–6.5", tag: "bestseller" },
+  { plant: "Кактус, суккулент", type: "Суккуленты", product: "Умный Грунт «Пустыня»", drainage: "Очень высокий", watering: "1–2 раза в месяц", ph: "6.0–7.5", tag: null },
+  { plant: "Орхидея фаленопсис", type: "Орхидеи", product: "Умный Грунт «Орхид»", drainage: "Максимальный", watering: "Раз в 1–2 недели", ph: "5.5–6.5", tag: "popular" },
+  { plant: "Роза, пион, хризантема", type: "Цветущие", product: "Умный Грунт «Цветение»", drainage: "Средний", watering: "3–4 раза в неделю", ph: "6.0–7.0", tag: null },
+  { plant: "Томат, перец, огурец", type: "Овощи", product: "Умный Грунт «Урожай»", drainage: "Средний", watering: "Ежедневно", ph: "6.2–7.0", tag: "new" },
+  { plant: "Папоротник, хоста", type: "Теневые", product: "Умный Грунт «Тень»", drainage: "Низкий", watering: "2–3 раза в неделю", ph: "5.0–6.5", tag: null },
+  { plant: "Бонсай", type: "Бонсай", product: "Умный Грунт «Дзен»", drainage: "Высокий", watering: "По необходимости", ph: "6.0–7.0", tag: "popular" },
 ];
 
-const GUIDES = [
-  {
-    step: "01",
-    title: "Подготовка",
-    desc: "Выберите новый горшок на 2–3 см больше предыдущего. Замочите глиняный горшок в воде на 30 минут — это предотвратит поглощение влаги из грунта.",
-    icon: "Sprout",
-  },
-  {
-    step: "02",
-    title: "Извлечение растения",
-    desc: "Аккуратно обожмите горшок со всех сторон. Переверните, придерживая стебель двумя пальцами. Не тяните за стебель — тяните за ком земли.",
-    icon: "Leaf",
-  },
-  {
-    step: "03",
-    title: "Осмотр корней",
-    desc: "Очистите корни от старого грунта. Удалите тёмные мягкие корни острым чистым секатором. Здоровые корни — белые или светло-бежевые.",
-    icon: "Search",
-  },
-  {
-    step: "04",
-    title: "Подготовка грунта",
-    desc: "Насыпьте слой дренажа 2–3 см. Добавьте Умный Грунт, подходящий для вашего растения. Сформируйте «холмик» по центру.",
-    icon: "Package",
-  },
-  {
-    step: "05",
-    title: "Посадка",
-    desc: "Установите растение по центру. Корневая шейка должна быть на 1–2 см ниже края горшка. Равномерно засыпьте грунт, слегка уплотните.",
-    icon: "Flower",
-  },
-  {
-    step: "06",
-    title: "Первый полив",
-    desc: "Обильно полейте до появления воды в поддоне. Поставьте в полутень на 1–2 недели — растению нужно время на адаптацию.",
-    icon: "Droplets",
-  },
+const INITIAL_GUIDES: Guide[] = [
+  { step: "01", title: "Подготовка", desc: "Выберите новый горшок на 2–3 см больше предыдущего. Замочите глиняный горшок в воде на 30 минут — это предотвратит поглощение влаги из грунта.", icon: "Sprout" },
+  { step: "02", title: "Извлечение растения", desc: "Аккуратно обожмите горшок со всех сторон. Переверните, придерживая стебель двумя пальцами. Не тяните за стебель — тяните за ком земли.", icon: "Leaf" },
+  { step: "03", title: "Осмотр корней", desc: "Очистите корни от старого грунта. Удалите тёмные мягкие корни острым чистым секатором. Здоровые корни — белые или светло-бежевые.", icon: "Search" },
+  { step: "04", title: "Подготовка грунта", desc: "Насыпьте слой дренажа 2–3 см. Добавьте Умный Грунт, подходящий для вашего растения. Сформируйте «холмик» по центру.", icon: "Package" },
+  { step: "05", title: "Посадка", desc: "Установите растение по центру. Корневая шейка должна быть на 1–2 см ниже края горшка. Равномерно засыпьте грунт, слегка уплотните.", icon: "Flower" },
+  { step: "06", title: "Первый полив", desc: "Обильно полейте до появления воды в поддоне. Поставьте в полутень на 1–2 недели — растению нужно время на адаптацию.", icon: "Droplets" },
 ];
 
 const FILTER_OPTIONS = ["Все типы", "Тропические", "Суккуленты", "Орхидеи", "Цветущие", "Овощи", "Теневые", "Бонсай"];
 
 export default function Index() {
+  const [editMode, setEditMode] = useState(false);
   const [activeFilter, setActiveFilter] = useState("Все типы");
   const [activeNav, setActiveNav] = useState("hero");
   const [formData, setFormData] = useState({ name: "", email: "", message: "" });
   const [formSent, setFormSent] = useState(false);
 
+  // Editable content state
+  const [heroTag, setHeroTag] = useState("Премиальный субстрат · Научный подход");
+  const [heroH1, setHeroH1] = useState("Земля, которая думает");
+  const [heroDesc, setHeroDesc] = useState("Каждая смесь создана с пониманием биологии конкретного растения. Не просто грунт — экосистема для корней.");
+  const [heroCta, setHeroCta] = useState("Подобрать грунт");
+  const [heroCtaSecondary, setHeroCtaSecondary] = useState("О бренде");
+
+  const [philoH2, setPhiloH2] = useState("Рождённые из уважения к природе");
+  const [philoP1, setPhiloP1] = useState("Умный Грунт появился в 2012 году из неудовлетворённости стандартными субстратами. Основатели — агроном и биолог — задались вопросом: почему грунт для монстеры и кактуса должен быть одинаковым?");
+  const [philoP2, setPhiloP2] = useState("Каждая наша смесь — результат многолетних наблюдений за тем, как растения реагируют на pH, аэрацию, влагоёмкость и минеральный баланс. Мы не добавляем ничего лишнего. Только то, что нужно корням.");
+  const [philoP3, setPhiloP3] = useState("Философия проста: здоровое растение начинается снизу. С правильной земли. С умного грунта.");
+  const [philoQuote, setPhiloQuote] = useState("«Каждый корень заслуживает идеальной почвы»");
+  const [philoCity, setPhiloCity] = useState("Москва, с любовью к растениям");
+
+  const [packTitle, setPackTitle] = useState("Детали, которые имеют значение");
+  const [packDesc, setPackDesc] = useState("Каждая упаковка Умного Грунта несёт выборочный УФ-лак на логотипе — символ нашей приверженности совершенству. Матовая поверхность контрастирует с глянцевым логотипом, создавая тактильный и визуальный эффект премиального продукта.");
+
+  const [contactPhone, setContactPhone] = useState("8 800 123-45-67");
+  const [contactEmail, setContactEmail] = useState("hello@smart-grunt.ru");
+  const [contactAddress, setContactAddress] = useState("Москва, ул. Ботаническая, 15, офис 201\nПн–Пт 9:00–18:00");
+
+  const [contactOnline, setContactOnline] = useState("Сайт, Ozon, Wildberries, ВКонтакте-магазин.\nДоставка по России 2–7 дней, Москва — на следующий день.");
+  const [contactRetail, setContactRetail] = useState("Более 200 садовых центров и цветочных магазинов по всей России. Найдите ближайший через поиск на карте.");
+  const [contactWholesale, setContactWholesale] = useState("Специальные условия для садовых центров, питомников и озеленителей. Напишите нам для обсуждения партнёрства.");
+
+  const [guides, setGuides] = useState<Guide[]>(INITIAL_GUIDES);
+  const updateGuide = (i: number, field: keyof Guide, val: string) => {
+    setGuides(prev => prev.map((g, idx) => idx === i ? { ...g, [field]: val } : g));
+  };
+
+  const [soilData, setSoilData] = useState<SoilRow[]>(INITIAL_SOIL);
+  const updateSoil = (i: number, field: keyof SoilRow, val: string) => {
+    setSoilData(prev => prev.map((r, idx) => idx === i ? { ...r, [field]: val } : r));
+  };
+
   const filteredSoil = activeFilter === "Все типы"
-    ? SOIL_DATA
-    : SOIL_DATA.filter(s => s.type === activeFilter);
+    ? soilData
+    : soilData.filter(s => s.type === activeFilter);
 
   const scrollTo = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
@@ -128,8 +86,33 @@ export default function Index() {
     setFormSent(true);
   };
 
+  const E = (props: {
+    value: string; onChange: (v: string) => void;
+    className?: string; multiline?: boolean; as?: keyof React.JSX.IntrinsicElements;
+  }) => <EditableText {...props} editMode={editMode} />;
+
   return (
     <div className="min-h-screen bg-background grain relative">
+
+      {/* EDIT MODE TOGGLE */}
+      <div className="fixed bottom-6 right-6 z-[100] flex items-center gap-2">
+        {editMode && (
+          <span className="font-golos text-xs text-olive/80 bg-background/90 border border-olive/30 px-3 py-1.5 backdrop-blur-sm">
+            Кликай на любой текст
+          </span>
+        )}
+        <button
+          onClick={() => setEditMode(e => !e)}
+          className={`flex items-center gap-2 font-golos text-xs tracking-[0.1em] uppercase px-4 py-2.5 border transition-all duration-300 shadow-lg ${
+            editMode
+              ? "bg-olive text-forest-deep border-olive"
+              : "bg-background/90 border-border text-muted-foreground hover:border-olive/50 hover:text-cream backdrop-blur-sm"
+          }`}
+        >
+          <Icon name={editMode ? "Check" : "Pencil"} size={14} />
+          {editMode ? "Готово" : "Редактировать"}
+        </button>
+      </div>
 
       {/* NAV */}
       <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-8 py-5 border-b border-border/40 backdrop-blur-md bg-background/80">
@@ -168,9 +151,7 @@ export default function Index() {
       <section id="hero" className="relative min-h-screen flex items-center overflow-hidden">
         <div
           className="absolute inset-0 bg-cover bg-center"
-          style={{
-            backgroundImage: `url(https://cdn.poehali.dev/projects/79caecdd-a9dc-48f0-bd49-d9d21eb15c8d/files/280bb8dd-ed32-47ce-890f-5f06b15fac56.jpg)`,
-          }}
+          style={{ backgroundImage: `url(https://cdn.poehali.dev/projects/79caecdd-a9dc-48f0-bd49-d9d21eb15c8d/files/280bb8dd-ed32-47ce-890f-5f06b15fac56.jpg)` }}
         />
         <div className="absolute inset-0 bg-gradient-to-r from-background via-background/85 to-background/30" />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
@@ -178,29 +159,27 @@ export default function Index() {
         <div className="relative z-10 max-w-7xl mx-auto px-8 w-full pt-28">
           <div className="max-w-2xl">
             <p className="animate-fade-up font-golos text-xs tracking-[0.3em] uppercase text-olive/80 mb-6">
-              Премиальный субстрат · Научный подход
+              <E value={heroTag} onChange={setHeroTag} className="font-golos text-xs tracking-[0.3em] uppercase text-olive/80" />
             </p>
             <h1 className="animate-fade-up-delay-1 font-cormorant text-6xl md:text-8xl leading-[0.9] text-cream font-light mb-8">
-              Земля,<br />
-              <em className="text-olive font-light">которая</em><br />
-              думает
+              <E value={heroH1} onChange={setHeroH1} className="font-cormorant text-6xl md:text-8xl leading-[0.9] text-cream font-light" />
             </h1>
             <p className="animate-fade-up-delay-2 font-golos text-base text-muted-foreground font-light leading-relaxed max-w-md mb-10">
-              Каждая смесь создана с пониманием биологии конкретного растения.
-              Не просто грунт — экосистема для корней.
+              <E value={heroDesc} onChange={setHeroDesc} multiline className="font-golos text-base text-muted-foreground font-light leading-relaxed" />
             </p>
             <div className="animate-fade-up-delay-3 flex items-center gap-6">
               <button
                 onClick={() => scrollTo("table")}
                 className="font-golos text-sm tracking-[0.1em] uppercase px-8 py-4 bg-olive text-forest-deep font-medium hover:bg-olive-light transition-all duration-300"
               >
-                Подобрать грунт
+                <E value={heroCta} onChange={setHeroCta} className="font-golos text-sm tracking-[0.1em] uppercase" />
               </button>
               <button
                 onClick={() => scrollTo("philosophy")}
                 className="font-golos text-sm tracking-[0.1em] text-muted-foreground hover:text-cream transition-colors flex items-center gap-2"
               >
-                О бренде <Icon name="ArrowRight" size={16} />
+                <E value={heroCtaSecondary} onChange={setHeroCtaSecondary} className="font-golos text-sm" />
+                <Icon name="ArrowRight" size={16} />
               </button>
             </div>
           </div>
@@ -242,30 +221,16 @@ export default function Index() {
         <div className="grid md:grid-cols-2 gap-16 items-center">
           <div>
             <h2 className="font-cormorant text-5xl md:text-6xl text-cream font-light leading-tight mb-8">
-              Рождённые<br />
-              из <em className="text-olive">уважения</em><br />
-              к природе
+              <E value={philoH2} onChange={setPhiloH2} className="font-cormorant text-5xl md:text-6xl text-cream font-light leading-tight" />
             </h2>
             <div className="space-y-5 text-muted-foreground font-golos font-light leading-relaxed">
-              <p>
-                Умный Грунт появился в 2012 году из неудовлетворённости стандартными субстратами.
-                Основатели — агроном и биолог — задались вопросом: почему грунт для монстеры
-                и кактуса должен быть одинаковым?
-              </p>
-              <p>
-                Каждая наша смесь — результат многолетних наблюдений за тем, как растения
-                реагируют на pH, аэрацию, влагоёмкость и минеральный баланс. Мы не добавляем
-                ничего лишнего. Только то, что нужно корням.
-              </p>
-              <p>
-                Философия проста:{" "}
-                <span className="text-olive-light">здоровое растение начинается снизу</span>.
-                С правильной земли. С умного грунта.
-              </p>
+              <p><E value={philoP1} onChange={setPhiloP1} multiline className="font-golos text-base text-muted-foreground font-light leading-relaxed" as="span" /></p>
+              <p><E value={philoP2} onChange={setPhiloP2} multiline className="font-golos text-base text-muted-foreground font-light leading-relaxed" as="span" /></p>
+              <p><E value={philoP3} onChange={setPhiloP3} multiline className="font-golos text-base text-muted-foreground font-light leading-relaxed" as="span" /></p>
             </div>
             <div className="mt-10 flex items-center gap-4">
               <div className="deco-line" />
-              <span className="font-cormorant text-sm italic text-muted-foreground">Москва, с любовью к растениям</span>
+              <E value={philoCity} onChange={setPhiloCity} className="font-cormorant text-sm italic text-muted-foreground" as="span" />
             </div>
           </div>
 
@@ -277,7 +242,7 @@ export default function Index() {
               className="w-full aspect-[4/5] object-cover grayscale-[20%]"
             />
             <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-background/90 to-transparent">
-              <p className="font-cormorant text-lg italic text-cream/70">«Каждый корень заслуживает идеальной почвы»</p>
+              <E value={philoQuote} onChange={setPhiloQuote} className="font-cormorant text-lg italic text-cream/70" as="p" />
             </div>
           </div>
         </div>
@@ -340,37 +305,36 @@ export default function Index() {
                 </tr>
               </thead>
               <tbody>
-                {filteredSoil.map((row, i) => (
-                  <tr key={i} className="soil-row border-b border-border/40">
-                    <td className="py-5 pr-6">
-                      <div className="font-golos text-sm text-cream font-light">{row.plant}</div>
-                      <div className="font-golos text-xs text-muted-foreground mt-0.5">{row.type}</div>
-                    </td>
-                    <td className="py-5 pr-6">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-golos text-sm text-olive-light">{row.product}</span>
-                        {row.tag === "bestseller" && (
-                          <span className="font-golos text-[10px] tracking-[0.1em] uppercase px-2 py-0.5 bg-olive/20 text-olive border border-olive/30">Хит</span>
-                        )}
-                        {row.tag === "popular" && (
-                          <span className="font-golos text-[10px] tracking-[0.1em] uppercase px-2 py-0.5 bg-gold/10 text-gold border border-gold/30">Популярный</span>
-                        )}
-                        {row.tag === "new" && (
-                          <span className="font-golos text-[10px] tracking-[0.1em] uppercase px-2 py-0.5 bg-cream/10 text-cream/70 border border-cream/20">Новинка</span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="py-5 pr-6 hidden md:table-cell">
-                      <span className="font-golos text-sm text-muted-foreground">{row.drainage}</span>
-                    </td>
-                    <td className="py-5 pr-6 hidden md:table-cell">
-                      <span className="font-golos text-sm text-muted-foreground">{row.watering}</span>
-                    </td>
-                    <td className="py-5">
-                      <span className="font-cormorant text-base text-cream/70">{row.ph}</span>
-                    </td>
-                  </tr>
-                ))}
+                {filteredSoil.map((row, i) => {
+                  const globalIdx = soilData.indexOf(row);
+                  return (
+                    <tr key={i} className="soil-row border-b border-border/40">
+                      <td className="py-5 pr-6">
+                        <div className="font-golos text-sm text-cream font-light">
+                          <E value={row.plant} onChange={v => updateSoil(globalIdx, "plant", v)} className="font-golos text-sm text-cream font-light" />
+                        </div>
+                        <div className="font-golos text-xs text-muted-foreground mt-0.5">{row.type}</div>
+                      </td>
+                      <td className="py-5 pr-6">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <E value={row.product} onChange={v => updateSoil(globalIdx, "product", v)} className="font-golos text-sm text-olive-light" />
+                          {row.tag === "bestseller" && <span className="font-golos text-[10px] tracking-[0.1em] uppercase px-2 py-0.5 bg-olive/20 text-olive border border-olive/30">Хит</span>}
+                          {row.tag === "popular" && <span className="font-golos text-[10px] tracking-[0.1em] uppercase px-2 py-0.5 bg-gold/10 text-gold border border-gold/30">Популярный</span>}
+                          {row.tag === "new" && <span className="font-golos text-[10px] tracking-[0.1em] uppercase px-2 py-0.5 bg-cream/10 text-cream/70 border border-cream/20">Новинка</span>}
+                        </div>
+                      </td>
+                      <td className="py-5 pr-6 hidden md:table-cell">
+                        <E value={row.drainage} onChange={v => updateSoil(globalIdx, "drainage", v)} className="font-golos text-sm text-muted-foreground" />
+                      </td>
+                      <td className="py-5 pr-6 hidden md:table-cell">
+                        <E value={row.watering} onChange={v => updateSoil(globalIdx, "watering", v)} className="font-golos text-sm text-muted-foreground" />
+                      </td>
+                      <td className="py-5">
+                        <E value={row.ph} onChange={v => updateSoil(globalIdx, "ph", v)} className="font-cormorant text-base text-cream/70" />
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -401,17 +365,16 @@ export default function Index() {
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-px bg-border/30">
-          {GUIDES.map((g, i) => (
-            <div
-              key={i}
-              className="bg-card p-8 hover:bg-forest transition-colors duration-300 group relative overflow-hidden"
-            >
+          {guides.map((g, i) => (
+            <div key={i} className="bg-card p-8 hover:bg-forest transition-colors duration-300 group relative overflow-hidden">
               <div className="absolute top-6 right-6 font-cormorant text-5xl text-border/50 group-hover:text-olive/20 transition-colors duration-300 select-none">
                 {g.step}
               </div>
               <Icon name={g.icon} fallback="Leaf" size={20} className="text-olive mb-5" />
-              <h3 className="font-cormorant text-xl text-cream mb-3">{g.title}</h3>
-              <p className="font-golos text-sm text-muted-foreground font-light leading-relaxed">{g.desc}</p>
+              <h3 className="font-cormorant text-xl text-cream mb-3">
+                <E value={g.title} onChange={v => updateGuide(i, "title", v)} className="font-cormorant text-xl text-cream" />
+              </h3>
+              <E value={g.desc} onChange={v => updateGuide(i, "desc", v)} multiline className="font-golos text-sm text-muted-foreground font-light leading-relaxed" as="p" />
             </div>
           ))}
         </div>
@@ -444,14 +407,9 @@ export default function Index() {
             <div>
               <p className="font-golos text-xs tracking-[0.3em] uppercase text-olive/80 mb-4">Упаковка</p>
               <h2 className="font-cormorant text-4xl text-cream font-light mb-6">
-                Детали, которые<br />имеют значение
+                <E value={packTitle} onChange={setPackTitle} className="font-cormorant text-4xl text-cream font-light" />
               </h2>
-              <p className="font-golos text-sm text-muted-foreground font-light leading-relaxed mb-8">
-                Каждая упаковка Умного Грунта несёт выборочный УФ-лак на логотипе —
-                символ нашей приверженности совершенству. Матовая поверхность
-                контрастирует с глянцевым логотипом, создавая тактильный и визуальный эффект
-                премиального продукта.
-              </p>
+              <E value={packDesc} onChange={setPackDesc} multiline className="font-golos text-sm text-muted-foreground font-light leading-relaxed mb-8" as="p" />
               <div className="space-y-4">
                 {[
                   "Экологичная крафт-упаковка, 100% перерабатываемая",
@@ -485,42 +443,31 @@ export default function Index() {
             <div className="space-y-8">
               <div className="border-l-2 border-olive/40 pl-6">
                 <h3 className="font-cormorant text-xl text-cream mb-2">Онлайн</h3>
-                <p className="font-golos text-sm text-muted-foreground font-light leading-relaxed">
-                  Сайт, Ozon, Wildberries, ВКонтакте-магазин.<br />
-                  Доставка по России 2–7 дней, Москва — на следующий день.
-                </p>
+                <E value={contactOnline} onChange={setContactOnline} multiline className="font-golos text-sm text-muted-foreground font-light leading-relaxed" as="p" />
               </div>
-
               <div className="border-l-2 border-olive/40 pl-6">
                 <h3 className="font-cormorant text-xl text-cream mb-2">Розница</h3>
-                <p className="font-golos text-sm text-muted-foreground font-light leading-relaxed">
-                  Более 200 садовых центров и цветочных магазинов по всей России.
-                  Найдите ближайший через поиск на карте.
-                </p>
+                <E value={contactRetail} onChange={setContactRetail} multiline className="font-golos text-sm text-muted-foreground font-light leading-relaxed" as="p" />
               </div>
-
               <div className="border-l-2 border-olive/40 pl-6">
                 <h3 className="font-cormorant text-xl text-cream mb-2">Оптом</h3>
-                <p className="font-golos text-sm text-muted-foreground font-light leading-relaxed">
-                  Специальные условия для садовых центров, питомников и озеленителей.
-                  Напишите нам для обсуждения партнёрства.
-                </p>
+                <E value={contactWholesale} onChange={setContactWholesale} multiline className="font-golos text-sm text-muted-foreground font-light leading-relaxed" as="p" />
               </div>
 
               <div className="flex flex-wrap items-center gap-6 pt-4">
-                <a href="tel:+78001234567" className="flex items-center gap-2 text-sm font-golos text-muted-foreground hover:text-olive transition-colors">
+                <a href={`tel:${contactPhone.replace(/\D/g, "")}`} className="flex items-center gap-2 text-sm font-golos text-muted-foreground hover:text-olive transition-colors">
                   <Icon name="Phone" size={16} className="text-olive" />
-                  8 800 123-45-67
+                  <E value={contactPhone} onChange={setContactPhone} className="font-golos text-sm text-muted-foreground" />
                 </a>
-                <a href="mailto:hello@smart-grunt.ru" className="flex items-center gap-2 text-sm font-golos text-muted-foreground hover:text-olive transition-colors">
+                <a href={`mailto:${contactEmail}`} className="flex items-center gap-2 text-sm font-golos text-muted-foreground hover:text-olive transition-colors">
                   <Icon name="Mail" size={16} className="text-olive" />
-                  hello@smart-grunt.ru
+                  <E value={contactEmail} onChange={setContactEmail} className="font-golos text-sm text-muted-foreground" />
                 </a>
               </div>
 
               <div className="flex items-start gap-2 text-sm font-golos text-muted-foreground">
                 <Icon name="MapPin" size={16} className="text-olive mt-0.5 shrink-0" />
-                <span>Москва, ул. Ботаническая, 15, офис 201<br />Пн–Пт 9:00–18:00</span>
+                <E value={contactAddress} onChange={setContactAddress} multiline className="font-golos text-sm text-muted-foreground" as="span" />
               </div>
             </div>
           </div>
@@ -530,9 +477,7 @@ export default function Index() {
               <div className="h-full flex flex-col items-center justify-center text-center py-16">
                 <Icon name="CheckCircle" size={48} className="text-olive mb-4" />
                 <h3 className="font-cormorant text-3xl text-cream mb-2">Сообщение отправлено</h3>
-                <p className="font-golos text-sm text-muted-foreground font-light">
-                  Ответим в течение одного рабочего дня
-                </p>
+                <p className="font-golos text-sm text-muted-foreground font-light">Ответим в течение одного рабочего дня</p>
               </div>
             ) : (
               <>
@@ -540,41 +485,24 @@ export default function Index() {
                 <form onSubmit={handleForm} className="space-y-4">
                   <div>
                     <label className="font-golos text-xs tracking-[0.1em] uppercase text-muted-foreground block mb-2">Имя</label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.name}
-                      onChange={e => setFormData({ ...formData, name: e.target.value })}
+                    <input type="text" required value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })}
                       className="w-full bg-input border border-border px-4 py-3 font-golos text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-olive/60 transition-colors"
-                      placeholder="Ваше имя"
-                    />
+                      placeholder="Ваше имя" />
                   </div>
                   <div>
                     <label className="font-golos text-xs tracking-[0.1em] uppercase text-muted-foreground block mb-2">Email</label>
-                    <input
-                      type="email"
-                      required
-                      value={formData.email}
-                      onChange={e => setFormData({ ...formData, email: e.target.value })}
+                    <input type="email" required value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })}
                       className="w-full bg-input border border-border px-4 py-3 font-golos text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-olive/60 transition-colors"
-                      placeholder="your@email.ru"
-                    />
+                      placeholder="your@email.ru" />
                   </div>
                   <div>
                     <label className="font-golos text-xs tracking-[0.1em] uppercase text-muted-foreground block mb-2">Сообщение</label>
-                    <textarea
-                      required
-                      rows={4}
-                      value={formData.message}
-                      onChange={e => setFormData({ ...formData, message: e.target.value })}
+                    <textarea required rows={4} value={formData.message} onChange={e => setFormData({ ...formData, message: e.target.value })}
                       className="w-full bg-input border border-border px-4 py-3 font-golos text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-olive/60 transition-colors resize-none"
-                      placeholder="Вопрос, предложение или заявка на опт..."
-                    />
+                      placeholder="Вопрос, предложение или заявка на опт..." />
                   </div>
-                  <button
-                    type="submit"
-                    className="w-full font-golos text-sm tracking-[0.1em] uppercase py-4 bg-olive text-forest-deep font-medium hover:bg-olive-light transition-colors duration-300 mt-2"
-                  >
+                  <button type="submit"
+                    className="w-full font-golos text-sm tracking-[0.1em] uppercase py-4 bg-olive text-forest-deep font-medium hover:bg-olive-light transition-colors duration-300 mt-2">
                     Отправить сообщение
                   </button>
                 </form>
